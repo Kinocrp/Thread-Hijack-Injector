@@ -4,8 +4,8 @@ public LoaderShellCode
 
 LoaderShellCode proc
     sub rsp, 8
-    mov dword ptr [rsp], 11223344h
-    mov dword ptr [rsp + 4], 55667788h
+    mov dword ptr [rsp], 11223344h          ; Original EIP LOW
+    mov dword ptr [rsp + 4], 55667788h      ; Original EIP HIGH
 
     lea r11, [rsp]
 
@@ -46,14 +46,14 @@ LoaderShellCode proc
 
     mov dword ptr [rsp + 30h], 10000Fh
 
-    sub rsp, 20h                ; Shadow space
-    xor rcx, rcx
-    mov rdx, 1
-    mov r8, 1122334455667788h
-    
-    mov rax, 1122334455667788h
+    sub rsp, 20h                            ; Shadow space
+    xor rcx, rcx                            ; NULL
+    mov rdx, 1                              ; DLL_PROCESS_ATTACH
+    mov r8, 1122334455667788h               ; lpvReserved
+
+    mov rax, 1122334455667788h              ; Call Manual Map Entry
     call rax
-    
+
     add rsp, 20h
 
     ldmxcsr dword ptr [rsp + 34h]
@@ -81,7 +81,7 @@ LoaderShellCode proc
 
     mov rsp, [rsp + 98h]
 
-    ret
+    ret                                     ; Return to Original RIP
 LoaderShellCode endp
 
 end

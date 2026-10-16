@@ -21,7 +21,7 @@ LoaderShellCode proc
 
     mov eax, 11223344h                      ; Call Manual Map Entry
     call eax
-     
+
     mov esp, ebp
     pop ebp
 

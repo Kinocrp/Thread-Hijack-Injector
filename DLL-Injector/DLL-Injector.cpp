@@ -167,6 +167,8 @@ int main(int argc, char* argv[]) {
         system("pause");
         return 1;
     }
+	std::cout << "[+] Target found!\n";
+    std::cout << "[+] Target PID: " << targetPid << "\n";
 
     char fullPath[MAX_PATH];
     if (GetFullPathNameA(argv[2], MAX_PATH, fullPath, NULL) == 0) {
@@ -182,6 +184,7 @@ int main(int argc, char* argv[]) {
         system("pause");
         return 1;
     }
+	std::cout << "[+] OpenProcess success!\n";
 
     // Map DLL
     std::ifstream file(fullPath, std::ios::binary | std::ios::ate);
@@ -190,7 +193,7 @@ int main(int argc, char* argv[]) {
         system("pause");
         return 1;
     }
-
+    std::cout << "[+] DLL file opened successfully!\n";
     std::streamsize fileSize = file.tellg();
     file.seekg(0, std::ios::beg);
 
@@ -202,6 +205,7 @@ int main(int argc, char* argv[]) {
         system("pause");
         return 1;
     }
+    std::cout << "[+] DLL file read into memory successfully!\n";
 
     auto* pDosHeader = reinterpret_cast<IMAGE_DOS_HEADER*>(fileBuffer.data());
     if (pDosHeader->e_magic != 0x5A4D) {
@@ -242,6 +246,7 @@ int main(int argc, char* argv[]) {
         system("pause");
         return 1;
     }
+    std::cout << "[+] Mapped DLL written to target successfully!\n";
 
     // Map MMap Loader
     auto* loaderDosHeader = reinterpret_cast<IMAGE_DOS_HEADER*>(loader_dll_bytes.data());
@@ -302,8 +307,12 @@ int main(int argc, char* argv[]) {
     LPVOID pRemoteShellcode = nullptr;
 
     // Thread Hijack
+	std::cout << "[+] Attempting to hijack a thread in the target process...\n";
+
     THREAD_INFO info = GetActiveThread(targetPid);
     if (info.hThread) {
+        std::cout << "[+] Successfully obtained thread handle!\n";
+		std::cout << "[+] Thread ID: " << info.threadId << "\n";
 
         // ShellCode
         uintptr_t pLoadLibraryA = (uintptr_t)GetProcAddress(GetModuleHandleA("Kernel32.dll"), "LoadLibraryA");
@@ -454,6 +463,8 @@ int main(int argc, char* argv[]) {
             return 1;
         }
 
+		std::cout << "[+] Shellcode written to target successfully!\n";
+
         // Hijack
 #ifdef _WIN64
         info.ctx.Rip = (DWORD64)pRemoteShellcode;
@@ -462,7 +473,7 @@ int main(int argc, char* argv[]) {
 #endif
 
         if (SetThreadContext(info.hThread, &info.ctx)) {
-            std::cout << "[!] RIP/EIP successfully hijacked to Shellcode! Resuming thread " << info.threadId << "...\n";
+            std::cout << "[!] RIP/EIP successfully hijacked to Shellcode! Resuming thread...\n";
         }
 
         ResumeThread(info.hThread);
